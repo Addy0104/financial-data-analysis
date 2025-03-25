@@ -1,5 +1,5 @@
 use financial_data;
-
+-- SQL
 -- Customer distribution by city
 SELECT city, COUNT(*) AS customer_count
 FROM customers
@@ -183,3 +183,72 @@ FROM transactions
 WHERE amount < 0
 GROUP BY day_of_week, hour_of_day
 ORDER BY MIN(DAYOFWEEK(transaction_date)), hour_of_day;
+
+
+-- Python
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
+import pandas as pd
+
+# 1️⃣ Bar Chart - 15% of Customers Holding 45% of Deposits
+customers = ["Top 15%", "Remaining 85%"]
+deposits = [45, 55]
+
+plt.figure(figsize=(6,4))
+plt.bar(customers, deposits, color=['royalblue', 'lightgray'])
+plt.ylabel("Percentage of Total Deposits")
+plt.title("Distribution of Deposits Among Customers")
+plt.ylim(0, 100)
+plt.text(0, 45, "45%", ha='center', va='bottom', fontsize=12, fontweight='bold')
+plt.text(1, 55, "55%", ha='center', va='bottom', fontsize=12, fontweight='bold')
+
+plt.savefig("/mnt/data/deposit_distribution.png")
+plt.show()
+
+# 2️⃣ Heatmap - Transaction Volume by Hour and Day
+days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+hours = np.arange(0, 24)
+transactions = np.random.randint(5, 50, size=(7, 24))  # Simulated data
+
+plt.figure(figsize=(10, 5))
+sns.heatmap(transactions, cmap="Blues", xticklabels=hours, yticklabels=days)
+plt.xlabel("Hour of the Day")
+plt.ylabel("Day of the Week")
+plt.title("Transaction Volume Heatmap")
+
+plt.savefig("/mnt/data/transaction_heatmap.png")
+plt.show()
+
+# 3️⃣ Comparison Chart - Loan Repayment Speed
+categories = ["With Savings Account", "Without Savings Account"]
+repayment_speed = [19, 100]  # 19% faster repayment vs. full duration
+
+plt.figure(figsize=(6,4))
+plt.bar(categories, repayment_speed, color=['seagreen', 'tomato'])
+plt.ylabel("Relative Loan Repayment Speed (%)")
+plt.title("Impact of Savings Accounts on Loan Repayment")
+plt.ylim(0, 120)
+plt.text(0, 19, "19% Faster", ha='center', va='bottom', fontsize=12, fontweight='bold')
+plt.text(1, 100, "Baseline", ha='center', va='bottom', fontsize=12, fontweight='bold')
+
+plt.savefig("/mnt/data/loan_repayment_speed.png")
+plt.show()
+
+# 4️⃣ Geographical Chart - Transaction Frequency & Loan Uptake by Region
+regions = ["Urban (NYC, Chicago)", "Southern (TX, FL, GA)", "Other"]
+transactions = [122, 100, 90]  # Hypothetical transaction index
+loans = [50, 100, 75]  # Hypothetical loan uptake index
+
+df_geo = pd.DataFrame({"Region": regions, "Transactions": transactions, "Loans": loans})
+
+plt.figure(figsize=(8,5))
+ax = df_geo.set_index("Region").plot(kind='bar', stacked=False, color=['cornflowerblue', 'darkorange'])
+plt.title("Transaction Frequency & Loan Uptake by Region")
+plt.ylabel("Index Value")
+plt.xticks(rotation=0)
+plt.legend(["Transactions", "Loans"], loc="upper right")
+
+plt.savefig("/mnt/data/geographical_analysis.png")
+plt.show()
+
