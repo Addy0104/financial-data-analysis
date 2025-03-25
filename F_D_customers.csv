@@ -1,0 +1,11 @@
+"customer_id";"first_name";"last_name";"email";"phone";"address";"city";"join_date";"credit_score"
+1001;"John";"Smith";"john.smith@email.com";"555-0101";"123 Main St";"New York";"2020-01-15";720
+1002;"Sarah";"Johnson";"sjohnson@email.com";"555-0102";"456 Oak Ave";"Chicago";"2019-05-22";680
+1003;"Michael";"Williams";"mwilliams@email.com";"555-0103";"789 Pine Rd";"Boston";"2021-03-10";710
+1004;"Emily";"Brown";"ebrown@email.com";"555-0104";"321 Elm St";"Los Angeles";"2018-11-05";690
+1005;"David";"Jones";"djones@email.com";"555-0105";"654 Maple Dr";"Houston";"2022-02-18";750
+1006;"Jennifer";"Garcia";"jgarcia@email.com";"555-0106";"987 Cedar Ln";"Philadelphia";"2020-07-30";670
+1007;"Robert";"Miller";"rmiller@email.com";"555-0107";"159 Birch Blvd";"Phoenix";"2019-09-12";730
+1008;"Jessica";"Davis";"jdavis@email.com";"555-0108";"753 Spruce Way";"San Antonio";"2021-04-25";710
+1009;"Thomas";"Wilson";"twilson@email.com";"555-0109";"951 Aspen Ct";"San Diego";"2018-12-08";690
+1010;"Elizabeth";"Anderson";"eanderson@email.com";"555-0110";"357 Redwood Dr";"Dallas";"2022-01-19";760
