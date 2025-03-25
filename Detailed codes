@@ -1,0 +1,185 @@
+use financial_data;
+
+-- Customer distribution by city
+SELECT city, COUNT(*) AS customer_count
+FROM customers
+GROUP BY city
+ORDER BY customer_count DESC;
+
+-- Credit score distribution
+SELECT 
+  CASE 
+    WHEN credit_score >= 800 THEN 'Excellent'
+    WHEN credit_score >= 740 THEN 'Very Good'
+    WHEN credit_score >= 670 THEN 'Good'
+    WHEN credit_score >= 580 THEN 'Fair'
+    ELSE 'Poor' 
+  END AS credit_rating,
+  COUNT(*) AS count,
+  ROUND(COUNT(*)/(SELECT COUNT(*) FROM customers)*100,1) AS percentage
+FROM customers
+GROUP BY credit_rating
+ORDER BY credit_rating;
+
+
+-- Account type distribution
+SELECT account_type, COUNT(*) AS count, 
+       ROUND(AVG(balance),2) AS avg_balance
+FROM accounts
+GROUP BY account_type;
+
+-- Customer account holdings
+SELECT c.customer_id, c.first_name, c.last_name,
+       COUNT(a.account_id) AS num_accounts,
+       SUM(CASE WHEN a.account_type = 'CHECKING' THEN 1 ELSE 0 END) AS checking_count,
+       SUM(CASE WHEN a.account_type = 'SAVINGS' THEN 1 ELSE 0 END) AS savings_count
+FROM customers c
+JOIN accounts a ON c.customer_id = a.customer_id
+GROUP BY c.customer_id, c.first_name, c.last_name
+ORDER BY num_accounts DESC;
+
+
+-- Monthly spending by category
+SELECT 
+  DATE_FORMAT(transaction_date, '%Y-%m') AS month,
+  category,
+  ROUND(SUM(ABS(amount)),2) AS total_spending,
+  COUNT(*) AS transaction_count
+FROM transactions
+WHERE amount < 0
+GROUP BY month, category
+ORDER BY month, total_spending DESC;
+
+-- Top merchants by transaction volume
+SELECT description, COUNT(*) AS transaction_count,
+       ROUND(SUM(ABS(amount)),2) AS total_amount
+FROM transactions
+WHERE amount < 0
+GROUP BY description
+ORDER BY total_amount DESC
+LIMIT 10;
+
+
+-- Monthly net cash flow per customer
+SELECT 
+  c.customer_id,
+  c.first_name,
+  c.last_name,
+  DATE_FORMAT(t.transaction_date, '%Y-%m') AS month,
+  ROUND(SUM(CASE WHEN t.amount > 0 THEN t.amount ELSE 0 END),2) AS inflows,
+  ROUND(SUM(CASE WHEN t.amount < 0 THEN ABS(t.amount) ELSE 0 END),2) AS outflows,
+  ROUND(SUM(t.amount),2) AS net_flow
+FROM customers c
+JOIN accounts a ON c.customer_id = a.customer_id
+JOIN transactions t ON a.account_id = t.account_id
+GROUP BY c.customer_id, c.first_name, c.last_name, month
+ORDER BY customer_id, month;
+
+
+-- Loan performance by type
+SELECT 
+  loan_type,
+  COUNT(*) AS loan_count,
+  ROUND(SUM(original_amount),2) AS total_originated,
+  ROUND(SUM(current_balance),2) AS total_outstanding,
+  ROUND(SUM(original_amount - current_balance)/SUM(original_amount)*100,2) AS percent_paid
+FROM loans
+GROUP BY loan_type;
+
+-- Loan risk analysis
+SELECT 
+  l.loan_type,
+  CASE 
+    WHEN l.current_balance/l.original_amount > 0.9 THEN 'High Risk'
+    WHEN l.current_balance/l.original_amount > 0.7 THEN 'Medium Risk'
+    ELSE 'Low Risk'
+  END AS risk_category,
+  COUNT(*) AS loan_count,
+  ROUND(AVG(c.credit_score)) AS avg_credit_score
+FROM loans l
+JOIN accounts a ON l.account_id = a.account_id
+JOIN customers c ON a.customer_id = c.customer_id
+GROUP BY l.loan_type, risk_category
+ORDER BY l.loan_type, risk_category;
+
+
+-- Portfolio performance by investment type
+SELECT 
+  investment_type,
+  COUNT(*) AS positions,
+  ROUND(SUM(shares * avg_cost),2) AS total_cost,
+  ROUND(SUM(shares * current_value),2) AS total_value,
+  ROUND((SUM(shares * current_value) - SUM(shares * avg_cost))/SUM(shares * avg_cost)*100,2) AS pct_gain
+FROM investments
+GROUP BY investment_type;
+
+-- Top performing investments
+SELECT 
+  symbol,
+  investment_type,
+  ROUND((current_value - avg_cost)/avg_cost*100,2) AS pct_gain,
+  ROUND((current_value - avg_cost) * shares,2) AS dollar_gain
+FROM investments
+ORDER BY dollar_gain DESC
+LIMIT 10;
+
+
+-- Customer profitability segments
+SELECT 
+  c.customer_id,
+  c.first_name,
+  c.last_name,
+  ROUND(SUM(a.balance),2) AS total_balance,
+  ROUND(SUM(CASE WHEN a.account_type = 'SAVINGS' THEN a.balance * a.interest_rate/12 ELSE 0 END),2) AS monthly_interest_income,
+  ROUND(SUM(CASE WHEN a.account_type = 'LOAN' THEN a.balance * a.interest_rate/12 ELSE 0 END),2) AS monthly_interest_expense,
+  ROUND(SUM(CASE WHEN a.account_type = 'SAVINGS' THEN a.balance * a.interest_rate/12 ELSE 0 END) - 
+       SUM(CASE WHEN a.account_type = 'LOAN' THEN a.balance * a.interest_rate/12 ELSE 0 END),2) AS net_monthly_profit
+FROM customers c
+JOIN accounts a ON c.customer_id = a.customer_id
+GROUP BY c.customer_id, c.first_name, c.last_name
+ORDER BY net_monthly_profit DESC;
+
+-- High-value customer identification
+SELECT 
+  c.customer_id,
+  c.first_name,
+  c.last_name,
+  c.credit_score,
+  COUNT(DISTINCT a.account_id) AS num_accounts,
+  ROUND(SUM(a.balance),2) AS total_balance,
+  COUNT(t.transaction_id) AS transaction_count
+FROM customers c
+JOIN accounts a ON c.customer_id = a.customer_id
+LEFT JOIN transactions t ON a.account_id = t.account_id
+GROUP BY c.customer_id, c.first_name, c.last_name, c.credit_score
+HAVING SUM(a.balance) > 50000
+ORDER BY total_balance DESC;
+
+
+-- Simple CLV estimation
+SELECT 
+  c.customer_id,
+  c.first_name,
+  c.last_name,
+  DATEDIFF(CURRENT_DATE, c.join_date)/365 AS years_as_customer,
+  ROUND(SUM(CASE WHEN a.account_type = 'SAVINGS' THEN a.balance * a.interest_rate ELSE 0 END),2) AS annual_interest_income,
+  ROUND(SUM(CASE WHEN a.account_type = 'LOAN' THEN a.balance * a.interest_rate ELSE 0 END),2) AS annual_interest_expense,
+  ROUND((SUM(CASE WHEN a.account_type = 'SAVINGS' THEN a.balance * a.interest_rate ELSE 0 END) - 
+        SUM(CASE WHEN a.account_type = 'LOAN' THEN a.balance * a.interest_rate ELSE 0 END)) * 
+        (5 - DATEDIFF(CURRENT_DATE, c.join_date)/365),2) AS estimated_5yr_value
+FROM customers c
+JOIN accounts a ON c.customer_id = a.customer_id
+GROUP BY c.customer_id, c.first_name, c.last_name, years_as_customer
+ORDER BY estimated_5yr_value DESC;
+
+
+-- Daily transaction patterns
+SELECT 
+  DAYNAME(transaction_date) AS day_of_week,
+  HOUR(transaction_date) AS hour_of_day,
+  COUNT(*) AS transaction_count,
+  ROUND(SUM(ABS(amount)), 2) AS total_amount
+FROM transactions
+WHERE amount < 0
+GROUP BY day_of_week, hour_of_day
+ORDER BY MIN(DAYOFWEEK(transaction_date)), hour_of_day;
