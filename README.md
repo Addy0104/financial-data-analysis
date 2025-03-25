@@ -5,7 +5,7 @@ financial-data-analysis/
 │   ├── customers.csv
 │   ├── accounts.csv
 │   ├── transactions.csv
-│   ├── loans.csv
+│   ├── loans.csv	
 │   └── investments.csv
 ├── sql/
 │   ├── 01_database_schema.sql
